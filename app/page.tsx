@@ -25,6 +25,9 @@ export default function HomePage() {
 
     fetchCollegeListData();
   }, []);
+  useEffect(()=>{
+  console.log("college list",collegeList)
+  },[collegeList])
   const router = useRouter();
   const [formData, setFormData] = useState({
     collegeName: "",
