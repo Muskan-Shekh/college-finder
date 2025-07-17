@@ -13,7 +13,7 @@ export default function HomePage() {
   useEffect(() => {
     const fetchCollegeListData = async () => {
       try {
-        const response = await axios.get('http://localhost:4000/api/colleges', {
+        const response = await axios.get('https://finder-backend-7hnq.onrender.com/api/colleges', {
           headers: { 'Cache-Control': 'no-store' }
         });
         setCollegeList(response.data);
