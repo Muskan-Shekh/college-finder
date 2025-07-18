@@ -3,31 +3,48 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import CollegeList from "../components/CollegeList";
-import axios from "axios";
+// import CollegeList from "../components/CollegeList";
+import LocationAutocomplete from "../components/LocationAutocomplete";
+import { fetchCollegeList } from "../utils/api";
 
 export default function HomePage() {
-   const [collegeList, setCollegeList] = useState([] as any);
-  // const [error, setError] = useState(null);
+  const streams = [
+    "Bachelor of Technology (B.Tech)",
+    "Bachelor of Science (B.Sc)",
+    "Bachelor of Commerce (B.Com)",
+    "Bachelor of Arts (B.A)",
+    "Bachelor of Business Administration (BBA)",
+    "Bachelor of Computer Applications (BCA)",
+    "Master of Technology (M.Tech)",
+    "Master of Science (M.Sc)",
+    "Master of Commerce (M.Com)",
+    "Master of Arts (M.A)",
+    "Master of Business Administration (MBA)",
+    "Master of Computer Applications (MCA)",
+    "Doctor of Philosophy (Ph.D)",
+    "Diploma in Engineering",
+    "Diploma in Management",
+    "Integrated M.Sc",
+    "Integrated M.Tech",
+  ];
+  const [collegeList, setCollegeList] = useState([] as any);
+  const [filteredColleges, setFilteredColleges] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
-    const fetchCollegeListData = async () => {
+    const loadColleges = async () => {
       try {
-        const response = await axios.get('https://finder-backend-7hnq.onrender.com/api/colleges', {
-          headers: { 'Cache-Control': 'no-store' }
-        });
-        setCollegeList(response.data);
-      } catch (err) {
-        console.error('Failed to fetch college data:', err);
-        // setError('Failed to fetch college data');
+        const data = await fetchCollegeList();
+        setCollegeList(data);
+      } catch {
+        console.log("ERROR in fetching college list");
       }
     };
-
-    fetchCollegeListData();
+    loadColleges();
   }, []);
-  useEffect(()=>{
-  console.log("college list",collegeList)
-  },[collegeList])
+
+  useEffect(() => {}, [collegeList]);
+
   const router = useRouter();
   const [formData, setFormData] = useState({
     collegeName: "",
@@ -36,10 +53,49 @@ export default function HomePage() {
     location: "",
   });
 
+  // const handleChange = (
+  //   e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  // ) => {
+  //   setFormData({ ...formData, [e.target.name]: e.target.value });
+  // };
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    const updatedForm = { ...formData, [name]: value };
+    setFormData(updatedForm);
+
+    // Filter college list when typing in the college name field
+    if (name === "collegeName") {
+      const searchText = value.toLowerCase();
+      const matches = collegeList.filter((college: any) =>
+        college.name.toLowerCase().includes(searchText)
+      );
+      setFilteredColleges(matches);
+      setShowDropdown(searchText.length > 0 && matches.length > 0);
+    }
+  };
+
+  const handleLocationSelect = (location: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      location,
+    }));
+  };
+
+  const handleCollegeSelect = (collegeName: string) => {
+    setFormData((prev) => {
+      const selectedCollege = collegeList.find(
+        (college: any) => college.name === collegeName
+      );
+      return {
+        ...prev,
+        collegeName,
+        budget: selectedCollege?.fees?.amount || "", // set budget to fees amount if available
+      };
+    });
+    setShowDropdown(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -50,7 +106,6 @@ export default function HomePage() {
 
   return (
     <section className="min-h-screen">
-
       <h2 className="text-xl font-semibold mb-4">Find Your Ideal College</h2>
       <form
         onSubmit={handleSubmit}
@@ -64,7 +119,22 @@ export default function HomePage() {
             value={formData.collegeName}
             onChange={handleChange}
             className="w-full p-2 border rounded"
+            autoComplete="off"
+            placeholder="Enter college"
           />
+          {showDropdown && (
+            <ul className="absolute z-10 bg-white border max-h-48 overflow-y-auto mt-1 rounded shadow">
+              {filteredColleges.map((college: any, index: number) => (
+                <li
+                  key={index}
+                  onClick={() => handleCollegeSelect(college.name)}
+                  className="p-2 hover:bg-blue-100 cursor-pointer"
+                >
+                  {college.name}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">
@@ -74,30 +144,31 @@ export default function HomePage() {
             type="text"
             name="budget"
             value={formData.budget}
-            onChange={handleChange}
+            // readOnly
+            // onChange={handleChange}
             className="w-full p-2 border rounded"
           />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Stream</label>
-          <input
-            type="text"
+          <select
             name="stream"
             value={formData.stream}
             onChange={handleChange}
-            className="w-full p-2 border rounded"
-          />
+            className="w-full p-2 border rounded bg-white"
+          >
+            <option value="" disabled>
+              -- Select a Stream --
+            </option>
+            {streams.map((stream) => (
+              <option key={stream} value={stream}>
+                {stream}
+              </option>
+            ))}
+          </select>
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Location</label>
-          <input
-            type="text"
-            name="location"
-            value={formData.location}
-            onChange={handleChange}
-            className="w-full p-2 border rounded"
-          />
-        </div>
+
+        <LocationAutocomplete onLocationSelect={handleLocationSelect} />
         <div className="md:col-span-2">
           <button
             type="submit"
@@ -115,7 +186,7 @@ export default function HomePage() {
       >
         Compare Colleges
       </Link>
-      <CollegeList/>
+      {/* <CollegeList/> */}
     </section>
   );
 }
