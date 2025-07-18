@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { apiPath } from "../utils/apipath";
 
 type LocationAutocompleteProps = {
   onLocationSelect: (location: string) => void;
@@ -37,7 +38,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
 
     const fetchSuggestions = async () => {
       const response: any = await axios.get(
-        `http://localhost:4000/api/autocomplete`,
+        `${apiPath}/api/autocomplete`,
         {
           params: {
             input,
