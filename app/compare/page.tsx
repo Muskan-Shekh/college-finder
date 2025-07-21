@@ -136,11 +136,8 @@ import CollegeCard from "../../components/CollegeCard";
 import { College } from "../../utils/type";
 import { fetchCollegeList } from "../../utils/api";
 
-interface Props {
-  colleges: College[];
-}
 
-const CompareCollegesPage: React.FC<Props> = () => {
+const CompareCollegesPage = () => {
   const [selectedColleges, setSelectedColleges] = useState<College[]>([]);
   const [showComparison, setShowComparison] = useState(false);
   const [collegeList, setCollegeList] = useState<College[]>([]);
