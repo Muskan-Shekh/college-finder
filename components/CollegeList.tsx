@@ -1,87 +1,243 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 
 interface College {
+  rank: string;
   name: string;
   location: string;
-  type: string;
-  graduationRate: string;
-  averageCost: string;
-  satRange: string;
+  fees: {
+    amount: string;
+    description: string;
+  };
+  placement: {
+    averagePackage: string;
+    highestPackage: string;
+    placementPercentage: string;
+  };
+  approvals: string;
+  popularCourse: {
+    name: string;
+    cutoff: string;
+  };
+  reviews: {
+    rating: string;
+    basedOn: string;
+    tagline: string;
+  };
+  cdScore: string;
+  ranking: {
+    mainRank: string;
+    agency: string;
+    year: string;
+  };
+}
+interface CollegeTableProps {
+  filteredColleges: College[];
 }
 
-const CollegeList: React.FC = () => {
-  const colleges: College[] = [
-    {
-      name: "Ferris State University",
-      location: "Big Rapids, MI",
-      type: "4-year - Public - Medium - Rural",
-      graduationRate: "57% graduation rate",
-      averageCost: "$14K average per year after aid",
-      satRange: "400–1120",
-    },
-    {
-      name: "University of Puerto Rico: Aguadilla",
-      location: "Aguadilla, PR",
-      type: "4-year - Public - Small - Suburban",
-      graduationRate: "42% graduation rate",
-      averageCost: "$6K average per year after aid",
-      satRange: "422–546",
-    },
-    {
-      name: "California State University: Fullerton",
-      location: "Fullerton, CA",
-      type: "4-year - Public - Very Large - Suburban",
-      graduationRate: "69% graduation rate",
-      averageCost: "$8K average per year after aid",
-      satRange: "860–1070",
-    },
-  ];
+type SortKey = 'rank' | 'cutoff' | 'fees';
+type SortOrder = 'asc' | 'desc';
+
+const CollegeTable: React.FC<CollegeTableProps> = ({ filteredColleges }) => {
+  const pageSize = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortKey, setSortKey] = useState<SortKey>('rank');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+
+  // // Calculate pagination
+  // const totalPages = Math.ceil(filteredColleges.length / pageSize);
+  // const startIndex = (currentPage - 1) * pageSize;
+  // const paginatedColleges = filteredColleges.slice(
+  //   startIndex,
+  //   startIndex + pageSize
+  // );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredColleges]);
+
+   const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortOrder('asc');
+    }
+  };
+
+  // Sort logic
+  const sortedColleges = [...filteredColleges].sort((a, b) => {
+    const aValue =
+      sortKey === 'rank'
+        ? parseInt(a.rank.replace(/#/g, '')) || 0
+        : sortKey === 'cutoff'
+        ? parseInt(a?.popularCourse?.cutoff.replace(/\D/g, '')) || 0
+        : parseInt(a?.fees?.amount.replace(/[^\d]/g, '')) || 0;
+
+    const bValue =
+      sortKey === 'rank'
+        ? parseInt(b.rank.replace(/#/g, '')) || 0
+        : sortKey === 'cutoff'
+        ? parseInt(b?.popularCourse?.cutoff.replace(/\D/g, '')) || 0
+        : parseInt(b?.fees?.amount?.replace(/[^\d]/g, '')) || 0;
+
+    return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(sortedColleges.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedColleges = sortedColleges.slice(startIndex, startIndex + pageSize);
 
   return (
-    <div className="mx-auto p-4">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">100 Colleges found</h1>
-      </div>
+    <>
+      <div className="overflow-x-auto mt-8">
+        <table className="min-w-full text-sm text-left text-gray-800 border border-gray-200 rounded-lg">
+          <thead className="bg-gray-100 text-gray-900 uppercase text-xs">
+            <tr>
+              <th className="px-4 py-3 cursor-pointer" onClick={() => handleSort('rank')}>
+              Rank {sortKey === 'rank' && (sortOrder === 'asc' ? '↑' : '↓')}
+            </th>
+              <th className="px-4 py-3">College</th>
+              <th className="px-4 py-3">Location</th>
+              <th className="px-4 py-3 cursor-pointer" onClick={() => handleSort('cutoff')}>
+              Course & Cutoff {sortKey === 'cutoff' && (sortOrder === 'asc' ? '↑' : '↓')}
+            </th>
+              <th className="px-4 py-3 cursor-pointer" onClick={() => handleSort('fees')}>
+              Fees {sortKey === 'fees' && (sortOrder === 'asc' ? '↑' : '↓')}
+            </th>
+              <th className="px-4 py-3">Placements</th>
+              <th className="px-4 py-3">Reviews</th>
+              <th className="px-4 py-3">CD Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedColleges.map((college, index) => (
+              <tr key={index} className="border-t hover:bg-gray-50">
+                <td className="px-4 py-3 font-semibold">{college?.rank}</td>
+                <td className="px-4 py-3">
+                  <div className="font-medium text-blue-600">
+                    {college?.name}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {college?.approvals}
+                  </div>
+                </td>
+                <td className="px-4 py-3">{college?.location}</td>
+                <td className="px-4 py-3">
+                  <div className="font-semibold">
+                    {college?.popularCourse?.name}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {college?.popularCourse?.cutoff}
+                  </div>
+                </td>
+                <td className="px-4 py-3">
+                  <div>{college?.fees?.amount}</div>
+                  <div className="text-xs text-gray-500">
+                    {college?.fees?.description}
+                  </div>
+                </td>
+                <td className="px-4 py-3">
+                  <div>Avg: {college?.placement?.averagePackage}</div>
+                  <div>High: {college?.placement?.highestPackage}</div>
+                  <div className="text-xs text-green-600">
+                    {college?.placement?.placementPercentage}
+                  </div>
+                </td>
+                <td className="px-4 py-3">
+                  <div>{college?.reviews?.rating}</div>
+                  <div className="text-xs text-gray-500">
+                    {college?.reviews?.basedOn}
+                  </div>
+                  <div className="text-xs italic text-blue-500">
+                    {college?.reviews?.tagline}
+                  </div>
+                </td>
+                <td className="px-4 py-3">{college?.cdScore}</td>
+                <td className="px-4 py-3">
+                  <button className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
+                    Save
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-      <div className="mb-4 flex justify-end">
-        <button className="text-blue-600 font-medium">Sort by →</button>
-      </div>
-
-      <div className="space-y-6">
-        {colleges.map((college, index) => (
-          <div key={index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start">
-              <div>
-                <h2 className="text-lg font-semibold">{college.name} →</h2>
-                <p className="text-gray-600">{college.location}</p>
-              </div>
-              <button className="text-blue-600 font-medium">Save College</button>
-            </div>
-
-            <div className="mt-4 grid grid-cols-3 gap-4">
-              <div className="flex items-start">
-                <span className="mr-2">①</span>
-                <span>{college.type}</span>
-              </div>
-              <div className="flex items-start">
-                <span className="mr-2">②</span>
-                <span>{college.graduationRate}</span>
-              </div>
-              <div className="flex items-start">
-                <span className="mr-2">③</span>
-                <span>{college.averageCost}</span>
-              </div>
-            </div>
-
-            <div className="mt-2">
-              <span className="text-gray-500">sw</span>{" "}
-              <span>{college.satRange}</span>
-            </div>
+        {/* Pagination Controls */}
+        <div className="flex justify-between items-center mt-4">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            className="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <div className="text-sm text-gray-700">
+            Page {currentPage} of {totalPages}
           </div>
-        ))}
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            className="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
       </div>
-    </div>
+      {/* <tbody>
+          {filteredColleges?.map((college:College, index:number) => (
+            <tr key={index} className="border-t hover:bg-gray-50">
+              <td className="px-4 py-3 font-semibold">{college?.rank}</td>
+              <td className="px-4 py-3">
+                <div className="font-medium text-blue-600">{college?.name}</div>
+                <div className="text-xs text-gray-500">
+                  {college?.approvals}
+                </div>
+              </td>
+              <td className="px-4 py-3">{college?.location}</td>
+              <td className="px-4 py-3">
+                <div className="font-semibold">
+                  {college?.popularCourse?.name}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {college?.popularCourse?.cutoff}
+                </div>
+              </td>
+              <td className="px-4 py-3">
+                <div>{college?.fees?.amount}</div>
+                <div className="text-xs text-gray-500">
+                  {college?.fees?.description}
+                </div>
+              </td>
+              <td className="px-4 py-3">
+                <div>Avg: {college?.placement?.averagePackage}</div>
+                <div>High: {college?.placement?.highestPackage}</div>
+                <div className="text-xs text-green-600">
+                  {college?.placement?.placementPercentage}
+                </div>
+              </td>
+              <td className="px-4 py-3">
+                <div>{college?.reviews?.rating}</div>
+                <div className="text-xs text-gray-500">
+                  {college?.reviews?.basedOn}
+                </div>
+                <div className="text-xs italic text-blue-500">
+                  {college?.reviews?.tagline}
+                </div>
+              </td>
+              <td className="px-4 py-3">{college?.cdScore}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div> */}
+    </>
   );
 };
 
-export default CollegeList;
+export default CollegeTable;
