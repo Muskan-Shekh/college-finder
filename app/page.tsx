@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import Link from "next/link";
+// import Link from "next/link";
 // import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import CollegeList from "../components/CollegeList";
 // import LocationAutocomplete from "../components/LocationAutocomplete";
 import { fetchCollegeList } from "../utils/api";
+import { slugify } from "../utils/function";
 
 export default function HomePage() {
   // const streams = [
@@ -197,7 +198,7 @@ export default function HomePage() {
             {filteredColleges?.map((college: any, index: number) => (
               <a
                 key={index}
-                href={`/college/${index + 1}`}
+                href={`/college/${slugify(college?.name)}`}
                 className="flex gap-3 items-start px-4 py-3 hover:bg-gray-100 border-b"
               >
                 {/* <Image
@@ -233,13 +234,13 @@ export default function HomePage() {
         </button>
       </div>
 
-      <Link
+      {/* <Link
         href={"/compare"}
         type="button"
         className="cursor-pointer text-white bg-gradient-to-r mt-4 from-purple-500 via-purple-600 to-purple-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-purple-300 dark:focus:ring-purple-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"
       >
         Compare Colleges
-      </Link>
+      </Link> */}
       <CollegeList filteredColleges={collegeList} />
     </section>
   );

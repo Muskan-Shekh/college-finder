@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { fetchCollegeList } from '../../../utils/api';
 import CollegeDetail from '../../../components/CollegeDetail';
+import { slugify } from '../../../utils/function';
 
 // const mockColleges = [
 //   {
@@ -44,8 +45,7 @@ import CollegeDetail from '../../../components/CollegeDetail';
 
 export default function CollegeDetailPage() {
   const params = useParams();
-  const id = Number(params.id);
-  
+  const slug = params.id;
   const [form, setForm] = useState({ name: '', rating: 5, comment: '' });
    const [collegeList, setCollegeList] = useState([] as any);
 
@@ -63,8 +63,7 @@ export default function CollegeDetailPage() {
 
   useEffect(() => {}, [collegeList]);
 
-  const college = collegeList.find((c:any) => c.rank === `#${id}`);
-
+  const college = collegeList.find((c: any) => slugify(c.name) === slug);
   const [reviews, setReviews] = useState(college?.reviews || []);
 
   const handleReviewChange = (e: any) => {
